@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reloj Digital - Zonas Horarias</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .container {
+    max-width: 1200px;
+    width: 100%;
+  }
+
+  .title {
+    text-align: center;
+    color: white;
+    margin-bottom: 3rem;
+    font-size: 2.5rem;
+    font-weight: 300;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+
+  .controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .control-group {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .control-group label {
+    color: white;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .control-group select,
+  .control-group input {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .control-group input {
+    width: 200px;
+  }
+
+  .clocks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .clock-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+
+  .clock-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  }
+
+  .clock-delete {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255,0,0,0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: background 0.3s;
+  }
+
+  .clock-delete:hover {
+    background: rgba(255,0,0,1);
+  }
+
+  .zone-name {
+    color: rgba(255,255,255,0.8);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .zone-label {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .digital-time {
+    font-size: 3.5rem;
+    font-weight: 300;
+    color: white;
+    font-family: 'Courier New', monospace;
+    margin: 1rem 0;
+    letter-spacing: 2px;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+
+  .date-display {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  .analog-clock {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    position: relative;
+    margin: 1rem auto;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+    border: 3px solid rgba(255,255,255,0.4);
+  }
+
+  .clock-center {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+
+  .hand {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform-origin: bottom center;
+    border-radius: 10px;
+  }
+
+  .hour-hand {
+    width: 4px;
+    height: 40px;
+    background: rgba(255,255,255,0.9);
+    margin-left: -2px;
+  }
+
+  .minute-hand {
+    width: 3px;
+    height: 50px;
+    background: rgba(255,255,255,0.7);
+    margin-left: -1.5px;
+  }
+
+  .second-hand {
+    width: 2px;
+    height: 55px;
+    background: #ff6b6b;
+    margin-left: -1px;
+  }
+
+  .number {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  .number span {
+    position: absolute;
+    width: 100%;
+  }
+
+  .add-zone-form {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 15px;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .form-title {
+    color: white;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    display: block;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    font-size: 1rem;
+  }
+
+  .form-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-add {
+    background: #4CAF50;
+    color: white;
+  }
+
+  .btn-add:hover {
+    background: #45a049;
+    transform: scale(1.02);
+  }
+
+  .btn-cancel {
+    background: rgba(255,255,255,0.3);
+    color: white;
+  }
+
+  .btn-cancel:hover {
+    background: rgba(255,255,255,0.5);
+  }
+
+  .empty-state {
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+    padding: 3rem;
+    font-size: 1.1rem;
+  }
+
+  .toggle-form-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.5);
+    padding: 0.75rem 2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    margin: 0 auto;
+    display: block;
+    margin-bottom: 2rem;
+  }
+
+  .toggle-form-btn:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.7);
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .title {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .digital-time {
+      font-size: 2.5rem;
+    }
+
+    .clocks-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .controls {
+      flex-direction: column;
+    }
+
+    .control-group input {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1 class="title">⏰ Reloj Digital - Zonas Horarias</h1>
+
+  <button class="toggle-form-btn" id="toggleFormBtn">+ Agregar Nueva Zona Horaria</button>
+
+  <div class="add-zone-form hidden" id="addZoneForm">
+    <div class="form-title">Agregar Nueva Zona Horaria</div>
+    <div class="form-group">
+      <label>Nombre de la zona:</label>
+      <input type="text" id="zoneName" placeholder="ej: Nueva York, Tokio, Sydney">
+    </div>
+    <div class="form-group">
+      <label>Zona horaria (Offset GMT):</label>
+      <select id="timezoneSelect"></select>
+    </div>
+    <div class="form-buttons">
+      <button class="btn btn-add" id="addZoneBtn">Agregar Zona</button>
+      <button class="btn btn-cancel" id="cancelFormBtn">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="clocks-grid" id="clocksGrid"></div>
+
+  <div class="empty-state" id="emptyState">
+    Haz clic en "+ Agregar Nueva Zona Horaria" para comenzar
+  </div>
+</div>
+
+<script>
+// Zonas horarias predefinidas
+const timezones = [
+  { name: 'GMT/UTC', offset: 0, label: '(UTC ±0:00)' },
+  { name: 'GMT+1', offset: 1, label: '(UTC +1:00)' },
+  { name: 'GMT+2', offset: 2, label: '(UTC +2:00)' },
+  { name: 'GMT+3', offset: 3, label: '(UTC +3:00)' },
+  { name: 'GMT+4', offset: 4, label: '(UTC +4:00)' },
+  { name: 'GMT+5', offset: 5, label: '(UTC +5:00)' },
+  { name: 'GMT+5:30', offset: 5.5, label: '(UTC +5:30)' },
+  { name: 'GMT+6', offset: 6, label: '(UTC +6:00)' },
+  { name: 'GMT+7', offset: 7, label: '(UTC +7:00)' },
+  { name: 'GMT+8', offset: 8, label: '(UTC +8:00)' },
+  { name: 'GMT+9', offset: 9, label: '(UTC +9:00)' },
+  { name: 'GMT+10', offset: 10, label: '(UTC +10:00)' },
+  { name: 'GMT+11', offset: 11, label: '(UTC +11:00)' },
+  { name: 'GMT+12', offset: 12, label: '(UTC +12:00)' },
+  { name: 'GMT-1', offset: -1, label: '(UTC -1:00)' },
+  { name: 'GMT-2', offset: -2, label: '(UTC -2:00)' },
+  { name: 'GMT-3', offset: -3, label: '(UTC -3:00)' },
+  { name: 'GMT-4', offset: -4, label: '(UTC -4:00)' },
+  { name: 'GMT-5', offset: -5, label: '(UTC -5:00)' },
+  { name: 'GMT-6', offset: -6, label: '(UTC -6:00)' },
+  { name: 'GMT-7', offset: -7, label: '(UTC -7:00)' },
+  { name: 'GMT-8', offset: -8, label: '(UTC -8:00)' },
+  { name: 'GMT-9', offset: -9, label: '(UTC -9:00)' },
+  { name: 'GMT-10', offset: -10, label: '(UTC -10:00)' },
+  { name: 'GMT-11', offset: -11, label: '(UTC -11:00)' },
+  { name: 'GMT-12', offset: -12, label: '(UTC -12:00)' },
+];
+
+let clocks = [];
+
+// Inicializar
+function init() {
+  loadClocks();
+  populateTimezoneSelect();
+  setupEventListeners();
+  renderClocks();
+  updateTime();
+  setInterval(updateTime, 1000);
+}
+
+function loadClocks() {
+  const saved = localStorage.getItem('clocks');
+  if (saved) {
+    try {
+      clocks = JSON.parse(saved);
+    } catch(e) {
+      clocks = [];
+    }
+  }
+}
+
+function saveClocks() {
+  localStorage.setItem('clocks', JSON.stringify(clocks));
+}
+
+function populateTimezoneSelect() {
+  const select = document.getElementById('timezoneSelect');
+  timezones.forEach(tz => {
+    const option = document.createElement('option');
+    option.value = tz.offset;
+    option.textContent = `${tz.name} ${tz.label}`;
+    select.appendChild(option);
+  });
+}
+
+function setupEventListeners() {
+  document.getElementById('toggleFormBtn').addEventListener('click', () => {
+    document.getElementById('addZoneForm').classList.toggle('hidden');
+  });
+
+  document.getElementById('cancelFormBtn').addEventListener('click', () => {
+    document.getElementById('addZoneForm').classList.add('hidden');
+    document.getElementById('zoneName').value = '';
+  });
+
+  document.getElementById('addZoneBtn').addEventListener('click', addZone);
+}
+
+function addZone() {
+  const name = document.getElementById('zoneName').value.trim();
+  const offset = parseFloat(document.getElementById('timezoneSelect').value);
+
+  if (!name) {
+    alert('Por favor ingresa un nombre para la zona');
+    return;
+  }
+
+  clocks.push({
+    id: Date.now(),
+    name: name,
+    offset: offset
+  });
+
+  saveClocks();
+  renderClocks();
+  document.getElementById('zoneName').value = '';
+  document.getElementById('addZoneForm').classList.add('hidden');
+}
+
+function deleteZone(id) {
+  clocks = clocks.filter(c => c.id !== id);
+  saveClocks();
+  renderClocks();
+}
+
+function renderClocks() {
+  const grid = document.getElementById('clocksGrid');
+  const empty = document.getElementById('emptyState');
+
+  if (clocks.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+
+  empty.style.display = 'none';
+  grid.innerHTML = clocks.map(clock => `
+    <div class="clock-card">
+      <button class="clock-delete" onclick="deleteZone(${clock.id})">×</button>
+      <div class="zone-name">${clock.name}</div>
+      <div class="zone-label">GMT${clock.offset >= 0 ? '+' : ''}${clock.offset}</div>
+      
+      <div class="analog-clock">
+        <div class="number">
+          <span style="transform: rotate(0deg) translateY(-60px)">12</span>
+          <span style="transform: rotate(30deg) translateY(-60px)">1</span>
+          <span style="transform: rotate(60deg) translateY(-60px)">2</span>
+          <span style="transform: rotate(90deg) translateY(-60px)">3</span>
+          <span style="transform: rotate(120deg) translateY(-60px)">4</span>
+          <span style="transform: rotate(150deg) translateY(-60px)">5</span>
+          <span style="transform: rotate(180deg) translateY(-60px)">6</span>
+          <span style="transform: rotate(210deg) translateY(-60px)">7</span>
+          <span style="transform: rotate(240deg) translateY(-60px)">8</span>
+          <span style="transform: rotate(270deg) translateY(-60px)">9</span>
+          <span style="transform: rotate(300deg) translateY(-60px)">10</span>
+          <span style="transform: rotate(330deg) translateY(-60px)">11</span>
+        </div>
+        <div class="hand hour-hand" id="hour-${clock.id}"></div>
+        <div class="hand minute-hand" id="minute-${clock.id}"></div>
+        <div class="hand second-hand" id="second-${clock.id}"></div>
+        <div class="clock-center"></div>
+      </div>
+
+      <div class="digital-time" id="time-${clock.id}">--:--:--</div>
+      <div class="date-display" id="date-${clock.id}"></div>
+    </div>
+  `).join('');
+}
+
+function updateTime() {
+  clocks.forEach(clock => {
+    const now = new Date();
+    
+    // Obtener hora UTC
+    const utcHours = now.getUTCHours();
+    const utcMinutes = now.getUTCMinutes();
+    const utcSeconds = now.getUTCSeconds();
+    
+    // Aplicar offset
+    let hours = (utcHours + Math.floor(clock.offset)) % 24;
+    let minutes = utcMinutes + Math.round((clock.offset % 1) * 60);
+    let seconds = utcSeconds;
+    
+    if (hours < 0) hours += 24;
+    if (minutes >= 60) {
+      minutes -= 60;
+      hours = (hours + 1) % 24;
+    }
+    
+    // Actualizar reloj digital
+    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    document.getElementById(`time-${clock.id}`).textContent = timeStr;
+    
+    // Actualizar fecha
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    
+    // Calcular la fecha con el offset
+    const dateWithOffset = new Date(now.getTime() + clock.offset * 3600000);
+    const dayName = days[dateWithOffset.getUTCDay()];
+    const date = dateWithOffset.getUTCDate();
+    const month = months[dateWithOffset.getUTCMonth()];
+    const year = dateWithOffset.getUTCFullYear();
+    
+    document.getElementById(`date-${clock.id}`).textContent = `${dayName} ${date} ${month} ${year}`;
+    
+    // Actualizar reloj analógico
+    const secondDeg = (seconds / 60) * 360;
+    const minuteDeg = (minutes / 60) * 360 + (seconds / 60) * 6;
+    const hourDeg = (hours / 12) * 360 + (minutes / 60) * 30;
+    
+    document.getElementById(`second-${clock.id}`).style.transform = `rotate(${secondDeg}deg)`;
+    document.getElementById(`minute-${clock.id}`).style.transform = `rotate(${minuteDeg}deg)`;
+    document.getElementById(`hour-${clock.id}`).style.transform = `rotate(${hourDeg}deg)`;
+  });
+}
+
+init();
+</script>
+</body>
+</html>
